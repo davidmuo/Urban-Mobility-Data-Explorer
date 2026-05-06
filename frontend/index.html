@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Mobility Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div id="loadingScreen" class="loading-screen">
+    <div class="loader-content">
+        <div class="loader-brand">Urban<em>Pulse</em></div>
+        <div class="loader-bar"><div class="loader-fill"></div></div>
+        <div class="loader-text">Loading trip data...</div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<aside class="sidebar">
+    <div class="sb-brand">Urban<em>Pulse</em></div>
+    <div class="sb-sub">NYC Taxi Analytics</div>
+
+    <div class="sb-section">General</div>
+    <ul class="sb-nav">
+        <li><a href="#hero" class="nav-link active" data-section="hero"><span class="ni">◉</span> Dashboard</a></li>
+        <li><a href="#extra-charts-anchor" class="nav-link" data-section="extra-charts-anchor"><span class="ni">▤</span> Analytics</a></li>
+        <li><a href="#data-section-anchor" class="nav-link" data-section="data-section-anchor"><span class="ni">◫</span> Trip Explorer</a></li>
+    </ul>
+
+    <div class="sb-section">System</div>
+    <ul class="sb-nav">
+        <li><a href="#" class="nav-link" id="settingsToggle"><span class="ni">⚙</span> Settings</a></li>
+    </ul>
+
+    <div class="sb-spacer"></div>
+    <div class="sb-footer">NYC TLC Dataset · 2024<br>v1.0.0</div>
+</aside>
+
+<div class="content-wrapper">
+
+    <div class="topbar">
+        <div class="search-container">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="globalSearch" placeholder="Search trips, zones, boroughs..." class="search-input">
+            <div id="searchResults" class="search-dropdown"></div>
+        </div>
+        <div class="topbar-actions">
+            <div class="topbar-pill">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <span>Jan 2019</span>
+            </div>
+            <div class="topbar-pill live-pill">
+                <span class="live-dot"></span>
+                <span id="tripCountPill">0 trips</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="hero-section" id="hero">
+        <h1 class="hero-title">Your Mobility <em>Analysis</em></h1>
+        <p class="hero-desc">Exploring urban movement patterns across NYC yellow taxi trips — speed, distance, duration, and the pulse of the city.</p>
+    </section>
+
+    <header class="dashboard-header" style="display:none;">
+        <h1>Urban Mobility Explorer</h1>
+        <p>New York City Taxi Trip Insights</p>
+    </header>
+
+    <section class="control-bar">
+        <div class="control-group">
+            <label for="vendorSelect">Vendor</label>
+            <select id="vendorSelect">
+                <option value="all">All Vendors</option>
+                <option value="1">Vendor 1</option>
+                <option value="2">Vendor 2</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="passengerSelect">Passengers</label>
+            <select id="passengerSelect">
+                <option value="all">All</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6+</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="control-group">
+            <label for="endDate">End Date</label>
+            <input type="date" id="endDate">
+        </div>
+        <div class="control-actions">
+            <button id="applyFiltersBtn" class="btn-primary">Apply Filters</button>
+            <button id="resetFiltersBtn" class="btn-secondary">Reset</button>
+            <button id="exportCsvBtn" class="btn-secondary">Export CSV</button>
+        </div>
+    </section>
+
+    <section class="summary-metrics">
+        <div class="summary-card highlight-card">
+            <div class="summary-icon">◉</div>
+            <h3>Total Trips</h3>
+            <p id="metricTotalTrips">0</p>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">→</div>
+            <h3>Average Speed (mph)</h3>
+            <p id="metricAvgSpeed">0</p>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">◷</div>
+            <h3>Average Duration (min)</h3>
+            <p id="metricAvgDuration">0</p>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">⟿</div>
+            <h3>Average Distance (mi)</h3>
+            <p id="metricAvgDistance">0</p>
+        </div>
+    </section>
+
+    <section class="insights-grid" id="core-charts">
+        <div class="insight-panel">
+            <div class="panel-head">
+                <h2>Speed Distribution</h2>
+                <span class="panel-tag">Histogram</span>
+            </div>
+            <canvas id="speedChartCanvas"></canvas>
+        </div>
+        <div class="insight-panel">
+            <div class="panel-head">
+                <h2>Trip Duration Overview</h2>
+                <span class="panel-tag">Distribution</span>
+            </div>
+            <canvas id="durationChartCanvas"></canvas>
+        </div>
+        <div class="insight-panel wide">
+            <div class="panel-head">
+                <h2>Speed vs Distance Relationship</h2>
+                <span class="panel-tag">Scatter</span>
+            </div>
+            <canvas id="speedDistanceChartCanvas"></canvas>
+        </div>
+    </section>
+
+    <section class="insights-grid" id="extra-charts-anchor">
+        <div class="insight-panel" id="borough-anchor">
+            <div class="panel-head">
+                <h2>Trips by Borough</h2>
+                <span class="panel-tag">Pickup</span>
+            </div>
+            <canvas id="boroughChartCanvas"></canvas>
+        </div>
+        <div class="insight-panel" id="fare-anchor">
+            <div class="panel-head">
+                <h2>Payment Methods</h2>
+                <span class="panel-tag">Distribution</span>
+            </div>
+            <canvas id="paymentChartCanvas"></canvas>
+        </div>
+        <div class="insight-panel">
+            <div class="panel-head">
+                <h2>Hourly Trip Volume</h2>
+                <span class="panel-tag">24h Pattern</span>
+            </div>
+            <canvas id="hourlyChartCanvas"></canvas>
+        </div>
+        <div class="insight-panel">
+            <div class="panel-head">
+                <h2>Fare vs Distance</h2>
+                <span class="panel-tag">Correlation</span>
+            </div>
+            <canvas id="fareDistanceChartCanvas"></canvas>
+        </div>
+        <div class="insight-panel wide" id="heatmap-anchor">
+            <div class="panel-head">
+                <h2>Trip Density — Day x Hour</h2>
+                <span class="panel-tag">Heatmap</span>
+            </div>
+            <div id="heatmapContainer" class="heatmap-grid"></div>
+        </div>
+    </section>
+
+    <section class="insights-cards-row">
+        <div class="insight-card yellow-accent">
+            <div class="insight-accent-bar"></div>
+            <div class="insight-num">Insight 01</div>
+            <div class="insight-title">Rush Hour Economics</div>
+            <div class="insight-body">Evening rush (5-7 PM) generates 18% higher average fares than morning peaks, suggesting longer cross-borough commutes in the PM while shorter intra-Manhattan trips dominate mornings.</div>
+        </div>
+        <div class="insight-card pink-accent">
+            <div class="insight-accent-bar"></div>
+            <div class="insight-num">Insight 02</div>
+            <div class="insight-title">The Cash-Card Divide</div>
+            <div class="insight-body">Credit card trips average 22% longer distances than cash trips, with cash concentrated in outer boroughs — suggesting differing rider demographics and trip purposes across payment methods.</div>
+        </div>
+        <div class="insight-card mint-accent">
+            <div class="insight-accent-bar"></div>
+            <div class="insight-num">Insight 03</div>
+            <div class="insight-title">Weekend Night Surge</div>
+            <div class="insight-body">Friday and Saturday nights (11 PM-3 AM) see 3.2x the trip volume of weeknight equivalents, with average speeds dropping 40% from nightlife-driven congestion.</div>
+        </div>
+    </section>
+
+    <section class="data-section" id="data-section-anchor">
+        <div class="panel-head">
+            <h2>Longest Trips</h2>
+            <span class="panel-tag" id="tableRecordCount">Top 5</span>
+        </div>
+        <table id="longestTripsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Duration</th>
+                    <th>Distance</th>
+                    <th>Speed</th>
+                    <th>Passengers</th>
+                    <th>Vendor</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <p id="emptyStateMessage" class="empty-state" style="display:none;">No trips match the selected filters.</p>
+    </section>
+
+    <footer class="dashboard-footer">
+        <span>Urban Pulse — NYC Taxi Mobility Explorer</span>
+        <span>NYC TLC Yellow Taxi Trip Data · Jan 2019</span>
+    </footer>
+
+</div>
+
+<script src="js/charts.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

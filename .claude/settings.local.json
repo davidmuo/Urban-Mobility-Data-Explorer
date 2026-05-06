@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"c:\\\\Users\\\\Dranoh\\\\urban-mobility-data explorer\\\\Urban-Mobility-Data-Explorer\"; git add backend/runtime.txt backend/build.sh; git commit -m \"fix: pin Python 3.11 and prefer binary wheels for pandas\"; git push)",
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); Set-Location \"c:\\\\Users\\\\Dranoh\\\\urban-mobility-data explorer\\\\Urban-Mobility-Data-Explorer\"; git add .github/workflows/keep-alive.yml; git commit -m \"chore: add cron job to keep Render instance alive\"; git push)"
+    ]
+  }
+}
